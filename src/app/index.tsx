@@ -1,8 +1,8 @@
 import { useState } from "react";
-import axios from "axios";
 import { Alert, Pressable, Text, TextInput, View } from "react-native";
+import EnderecoCard from "../components/EnderecoCard";
+import { apiCep } from "../services/apiCep";
 import { styles } from "../style/indexStyle";
-import EnderecoCard from "../components/EnderecoCard"
 
 type Endereco = {
   cep: string;
@@ -10,6 +10,7 @@ type Endereco = {
   bairro: string;
   localidade: string;
   uf: string;
+  erro?: boolean;
 };
 
 export default function Home() {
@@ -25,24 +26,34 @@ export default function Home() {
       return;
     }
 
-    const resposta = await axios.get(
-      `https://viacep.com.br/ws/${cep}/json/`
-    );
-
-    if (resposta.data.erro) {
-      Alert.alert(
-        "CEP não encontrado",
-        "Verifique o CEP informado."
+    try {
+      const resposta = await apiCep.get<Endereco>(
+        `/${cep}/json/`
       );
-      return;
-    }
 
-    setEndereco(resposta.data);
+      if (resposta.data.erro) {
+        Alert.alert(
+          "CEP não encontrado",
+          "Verifique o CEP informado."
+        );
+        return;
+      }
+
+      setEndereco(resposta.data);
+
+    } catch (error) {
+      Alert.alert(
+        "Erro",
+        "Não foi possível consultar o CEP."
+      );
+    }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titulo}>Consulta de CEP</Text>
+      <Text style={styles.titulo}>
+        Consulta de CEP
+      </Text>
 
       <TextInput
         value={cep}
